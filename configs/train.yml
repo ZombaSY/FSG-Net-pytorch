@@ -1,0 +1,49 @@
+{
+ ### Environment Parameters
+  mode: train,
+  cuda: true,
+  pin_memory: true,
+  wandb: false,  # please check your wandb status
+  worker: 8,
+  log_interval: 9999,
+  save_interval: 1,
+  saved_model_directory: 'model_checkpoints',
+  train_fold: 1,
+  project_name: 'U_Net_modernize',
+  CUDA_VISIBLE_DEVICES: '0',
+
+  ### Train Parameters
+  model_name: 'neUNet',
+  dataloader: 'Image2Image_zero_pad',
+  num_class: 2,
+  criterion: 'DiceBCE',
+  task: 'segmentation',
+  input_space: 'RGB',
+  input_channel: 3,
+  input_size: [1024, 1024],  # DRIVE:608, STARE:704, CHASEDB1:1024
+  optimizer: 'AdamW',
+    lr: 0.001,
+    scheduler: 'WarmupCosine',
+    cycles: 100,
+    warmup_epoch: 20,
+    weight_decay: 0.05,
+  batch_size: 4,
+  epoch: 10000,
+  ema_decay: 0, # set 0 to deactivate
+  class_weight: [1.0, 1.0],
+  model_path: '',  # set empty to deactivate
+
+   ### Augmentation Parameters
+  transform_blur: true,
+  transform_jitter: true,
+  transform_hflip: true,
+  transform_perspective: true,
+  transform_cutmix: true,
+  transform_rand_resize: true,
+  transform_rand_crop: 288,
+
+  train_x_path: '/path/to/your/dataset/train/input',
+  train_y_path: '/path/to/your/dataset/train/label',
+  val_x_path: '/path/to/your/dataset/val/input',
+  val_y_path: '/path/to/your/dataset/val/label',
+}
