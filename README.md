@@ -29,8 +29,9 @@ For train/validation set, you can download from public link or divided dataset b
 [Train/Validation set for STARE](https://mega.nz/file/B8NQRYqL#2r-rI4-Y4JOhA62KYPDR5sedyNXFRiMCeQBWYi8ejdA) <br>
 [Train/Validation set for CHASE_DB1](https://mega.nz/file/IosDGJjJ#vH7HKRZEkgh1Yt8iOQoyuzFc-PqfJQHzx1Sn7wU2QAY) <br>
 
-<details>
-<summary>Train</summary>
+---
+
+### Train
 
 If you have installed 'WandB', login your ID in command line.<br>
 If not, fix <b>'wandb: false'</b> in <b>"configs/train.yml"</b>
@@ -40,11 +41,10 @@ For <b>Train</b>, edit the [<b>configs/train.yml</b>](configs/train.yml) and exe
 ```
 bash bash_train.sh
 ```
-</details>
 
+---
 
-<details>
-<summary>Inference</summary>
+### Inference
 
 For <b>Inference</b>, edit the [<b>configs/inference.yml</b>](configs/inference.yml) and execute below command. <br>
 Please locate your model path via  <b>'model_path'</b> in <b>"configs/inference.yml"</b>
@@ -52,5 +52,5 @@ Please locate your model path via  <b>'model_path'</b> in <b>"configs/inference.
 bash bash_inference.sh
 ```
 
-</details>
+- If you are using pretrained model, the result should be approximate to table's
 
