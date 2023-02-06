@@ -129,7 +129,8 @@ class Trainer_seg:
         print('{} epoch / Train f1_score: {}'.format(epoch, f1_score))
         if self.args.wandb:
             wandb.log({'Train Loss {}'.format(self.args.criterion): loss_mean,
-                       'Train f1_score': f1_score})
+                       'Train f1_score': f1_score},
+                      step=epoch)
 
     def _validate(self, model, epoch):
         model.eval()
@@ -156,7 +157,8 @@ class Trainer_seg:
         f1_score = sum(f1_list) / len(f1_list)
         print('{} epoch / Val f1_score: {}'.format(epoch, f1_score))
         if self.args.wandb:
-            wandb.log({'Val f1_score': f1_score})
+            wandb.log({'Val f1_score': f1_score},
+                      step=epoch)
 
         model_metrics = {'f1_score': f1_score}
 
@@ -168,7 +170,8 @@ class Trainer_seg:
         if (epoch - self.last_saved_epoch) > self.args.cycles * 4:
             print('The model seems to be converged. Early stop training.')
             print(f'Best F1 -----> {self.metric_best["f1_score"]}')
-            wandb.log({f'Best F1': self.metric_best['f1_score']})
+            wandb.log({f'Best F1': self.metric_best['f1_score']},
+                      step=epoch)
             sys.exit()  # safe exit
 
     def start_train(self):
