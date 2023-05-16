@@ -10,7 +10,13 @@
 - Pytorch 1.8.1
 
 ## Experimental Result
-![image_1](images/result.png)
+
+|Dataset|mIoU|F1 score|Acc|AUC|Sen|MCC
+|---|---|---|---|---|---|---|
+|DRIVE|84.068|83.229|97.042|98.235|84.207|81.731|
+|STARE|86.118|85.100|97.746|98.967|86.608|83.958|
+|CHASE_DB1|82.680|81.019|97.515|99.378|85.995|79.889|
+
 ![image_2](images/Qualitative_evaluation.png)
 
 
