@@ -1,4 +1,4 @@
-# [Official] [neU-Net: Renewing U-Net Design in Retinal Vessel Segmentation]
+# [Official] [Renewing U-Net Design in Retinal Vessel Segmentation]
 
 
 ## Environment
