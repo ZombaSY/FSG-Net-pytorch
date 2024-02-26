@@ -13,7 +13,6 @@ from models import losses as loss_hub
 from models import metrics
 
 from datetime import datetime
-from timm.utils import ModelEmaV2, get_state_dict
 
 
 class Trainer_seg:
@@ -45,10 +44,6 @@ class Trainer_seg:
                 self.model.load_state_dict(torch.load(self.args.model_path))
                 print('Model loaded successfully!!! (Custom)')
                 self.model.to(self.device)
-
-        # Important to create EMA model after cuda(), DP wrapper, and AMP but before SyncBN and DDP wrapper
-        if self.args.ema_decay != 0:
-            self.model_ema = ModelEmaV2(self.model, decay=self.args.ema_decay, device=self.device)
 
         self.criterion = self._init_criterion(self.args.criterion)
 
@@ -96,8 +91,6 @@ class Trainer_seg:
             self.optimizer.step()
             if self.scheduler is not None:
                 self.scheduler.step()
-            if self.args.ema_decay != 0:
-                self.model_ema.update(self.model)
 
             output_argmax = torch.where(output > 0.5, 1, 0).cpu()
             metric_result = metrics.metrics_np(output_argmax[:, 0], target.squeeze(0).detach().cpu().numpy(), b_auc=False)
@@ -106,10 +99,7 @@ class Trainer_seg:
 
             if hasattr(self.args, 'train_fold'):
                 if batch_idx != 0 and (batch_idx % self.__validate_interval) == 0:
-                    if self.args.ema_decay != 0:
-                        self._validate(self.model_ema.module, epoch)
-                    else:
-                        self._validate(self.model, epoch)
+                    self._validate(self.model, epoch)
 
             if (batch_idx != 0) and (batch_idx % (self.args.log_interval // self.args.batch_size) == 0):
                 loss_mean = np.mean(batch_losses)
@@ -177,10 +167,7 @@ class Trainer_seg:
     def start_train(self):
         for epoch in range(1, self.args.epoch + 1):
             self._train(epoch)
-            if self.args.ema_decay != 0:
-                self._validate(self.model_ema.module, epoch)
-            else:
-                self._validate(self.model, epoch)
+            self._validate(self.model, epoch)
 
             print('### {} / {} epoch ended###'.format(epoch, self.args.epoch))
 
@@ -197,10 +184,7 @@ class Trainer_seg:
                 os.remove(self.model_post_path_dict[metric_name])
             self.model_post_path_dict[metric_name] = file_format
 
-        if self.args.ema_decay != 0:
-            torch.save(get_state_dict(model), file_format)
-        else:
-            torch.save(model.state_dict(), file_format)
+        torch.save(model.state_dict(), file_format)
 
         print(file_format + '\t model saved!!')
         self.last_saved_epoch = epoch
@@ -224,49 +208,16 @@ class Trainer_seg:
 
         return loader
 
-    def __init_model(self, model_name):
-        if model_name == 'UNet':
-            model = model_implements.UNet(n_classes=1, in_channels=self.args.input_channel)
-        elif model_name == 'UNet2P':
-            model = model_implements.UNet2P(n_classes=1, in_channels=self.args.input_channel)
-        elif model_name == 'UNet3P_Deep':
-            model = model_implements.UNet3P_Deep(n_classes=1, in_channels=self.args.input_channel)
-        elif model_name == 'ResUNet':
-            model = model_implements.ResUNet(n_classes=1, in_channels=self.args.input_channel)
-        elif model_name == 'ResUNet2P':
-            model = model_implements.ResUNet2P(n_classes=1, in_channels=self.args.input_channel)
-        elif model_name == 'SAUNet':
-            model = model_implements.SAUNet(n_classes=1, in_channels=self.args.input_channel)
-        elif model_name == 'ATTUNet':
-            model = model_implements.ATTUNet(n_classes=1, in_channels=self.args.input_channel)
-        elif model_name == 'DCSAU_UNet':
-            model = model_implements.DCSAU_UNet(n_classes=1, in_channels=self.args.input_channel)
-        elif model_name == 'AGNet':
-            model = model_implements.AGNet(n_classes=1, in_channels=self.args.input_channel)
-        elif model_name == 'R2UNet':
-            model = model_implements.R2UNet(n_classes=1, in_channels=self.args.input_channel)
-        elif model_name == 'ConvUNeXt':
-            model = model_implements.ConvUNeXt(n_classes=1, in_channels=self.args.input_channel)
-        elif model_name == 'FRUNet':
-            model = model_implements.FRUNet(n_classes=1, in_channels=self.args.input_channel)
-        elif model_name == 'neUNet':
-            model = model_implements.neUNet(n_classes=1, in_channels=self.args.input_channel)
-        else:
-            raise Exception('No model named', model_name)
+    @staticmethod
+    def init_model(model_name, device, args):
+        model = getattr(model_implements, model_name)(**vars(args)).to(device)
 
-        return torch.nn.DataParallel(model.to(self.device))
+        return torch.nn.DataParallel(model)
 
-    def _init_criterion(self, criterion_name):
-        if criterion_name == 'CE':
-            criterion = loss_hub.CrossEntropy()
-        elif criterion_name == 'DiceBCE':
-            criterion = loss_hub.DiceBCELoss()
-        elif criterion_name == 'FocalBCE':
-            criterion = loss_hub.FocalBCELoss()
-        else:
-            raise Exception('No criterion named', criterion_name)
+    def init_criterion(self, criterion_name):
+        criterion = getattr(loss_hub, criterion_name)().to(self.device)
 
-        return criterion.to(self.device)
+        return criterion
 
     def _init_optimizer(self, optimizer_name, model, lr):
         optimizer = None

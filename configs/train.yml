@@ -13,10 +13,13 @@
   CUDA_VISIBLE_DEVICES: '0',
 
   ### Train Parameters
-  model_name: 'neUNet',
+  model_name: 'neUNet_v2',
+    num_class: 2,
+    in_channel: 3,
+    base_c: 16,
   dataloader: 'Image2Image_zero_pad',
-  num_class: 2,
-  criterion: 'DiceBCE',
+  n_classes: 2,
+  criterion: 'DiceBCELoss',
   task: 'segmentation',
   input_space: 'RGB',
   input_channel: 3,

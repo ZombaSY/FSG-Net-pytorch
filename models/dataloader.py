@@ -74,20 +74,26 @@ class Image2ImageLoader_zero_pad(Dataset):
         x_img_name = filter(is_image, x_img_name)
         y_img_name = filter(is_image, y_img_name)
 
-        self.x_img_path = []
-        self.y_img_path = []
+        self.img_x_path = []
+        self.img_y_path = []
 
         x_img_name = sorted(x_img_name)
         y_img_name = sorted(y_img_name)
 
         img_paths = zip(x_img_name, y_img_name)
         for item in img_paths:
-            self.x_img_path.append(x_path + os.sep + item[0])
-            self.y_img_path.append(y_path + os.sep + item[1])
+            self.img_x_path.append(x_path + os.sep + item[0])
+            self.img_y_path.append(y_path + os.sep + item[1])
 
-        assert len(self.x_img_path) == len(self.y_img_path), 'Images in directory must have same file indices!!'
+        assert len(self.img_x_path) == len(self.img_y_path), 'Images in directory must have same file indices!!'
 
-        self.len = len(x_img_name)
+        print(f'{utils.Colors.LIGHT_RED}Mounting data on memory...{self.__class__.__name__}:{self.mode}{utils.Colors.END}')
+        self.memory_data_y = []
+        for index in range(len(self.x_img_path)):
+            x_path = self.img_x_path[index]
+            y_path = self.img_y_path[index]
+            self.img_x = Image.open(x_path).convert('RGB')
+            self.img_y = Image.open(y_path).convert('L')
 
     def transform(self, image, target):
         if self.mode == 'validation':
@@ -98,7 +104,7 @@ class Image2ImageLoader_zero_pad(Dataset):
             random_gen = random.Random()  # thread-safe random
 
             if (random_gen.random() < 0.8) and self.args.transform_cutmix:
-                rand_n = random_gen.randint(0, self.len - 1)     # randomly generates reference image on dataset
+                rand_n = random_gen.randint(0, self.__len__() - 1)     # randomly generates reference image on dataset
                 image_refer = Image.open(self.x_img_path[rand_n]).convert('RGB')
                 target_refer = Image.open(self.y_img_path[rand_n]).convert('L')
                 image, target = utils.cut_mix(image, target, image_refer, target_refer)
@@ -161,15 +167,9 @@ class Image2ImageLoader_zero_pad(Dataset):
         return image_tensor, target_tensor
 
     def __getitem__(self, index):
-        x_path = self.x_img_path[index]
-        y_path = self.y_img_path[index]
+        img_x_tr, img_y_tr = self.transform(self.img_x[index], self.img_y[index])
 
-        img_x = Image.open(x_path).convert('RGB')
-        img_y = Image.open(y_path).convert('L')
-
-        img_x_tr, img_y_tr = self.transform(img_x, img_y)
-
-        return (img_x_tr, x_path), (img_y_tr, y_path)
+        return (img_x_tr, self.img_x_path[index]), (img_y_tr, self.img_y_path[index])
 
     def __len__(self):
         return self.len
