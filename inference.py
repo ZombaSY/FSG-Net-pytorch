@@ -7,6 +7,7 @@ from models import metrics
 from models import utils
 from models import dataloader as dataloader_hub
 from models import model_implements
+from train import Trainer_seg
 from PIL import Image
 
 
@@ -23,14 +24,11 @@ class Inferencer:
                                                    batch_size=1,
                                                    mode='validation')
 
-        self.loader_val = self.loader_form.Loader
-
-        self.model = self.__init_model(self.args.model_name)
+        self.model = Trainer_seg.init_model(self.args.model_name, self.device, self.args)
         self.model.load_state_dict(torch.load(args.model_path))
         self.model.eval()
 
-        self.num_batches_val = int(len(self.loader_val))
-        self.metric = self._init_metric(self.args.task, self.args.num_class)
+        self.metric = self._init_metric(self.args.task, self.args.n_classes)
 
         self.image_mean = self.loader_form.image_loader.image_mean
         self.image_std = self.loader_form.image_loader.image_std
@@ -42,8 +40,9 @@ class Inferencer:
         auc_list = []
         sen_list = []
         mcc_list = []
+        miou_list = []
 
-        for batch_idx, (img, target) in enumerate(self.loader_val):
+        for batch_idx, (img, target) in enumerate(self.loader_form.Loader):
             with torch.no_grad():
                 x_in, img_id = img
                 target, origin_size = target
@@ -63,14 +62,9 @@ class Inferencer:
                 auc_list.append(metric_result['auc'])
                 sen_list.append(metric_result['sen'])
                 mcc_list.append(metric_result['mcc'])
+                miou_list.append(metric_result['iou'])
 
-        metrics = self.metric.get_results()
-        cIoU = [metrics['Class IoU'][i] for i in range(self.args.num_class)]
-        mIoU = sum(cIoU) / self.args.num_class
-
-        print('mIoU: {}'.format(mIoU))
-        for i in range(self.args.num_class):
-            print(f'\t Class {i} IoU: {cIoU[i]}')
+        print('mean mIoU', sum(miou_list) / len(miou_list))
         print('mean F1 score:', sum(f1_list) / len(f1_list))
         print('mean Accuracy', sum(acc_list) / len(acc_list))
         print('mean AUC', sum(auc_list) / len(auc_list))
@@ -90,10 +84,6 @@ class Inferencer:
         target = utils.remove_center_padding(target)
 
         output_argmax = torch.where(output > 0.5, 1, 0).cpu().detach()
-        self.metric.update(target.squeeze(1).cpu().detach().numpy(), output_argmax.numpy())
-
-        # output_grey = (output.squeeze().cpu().detach().numpy() * 255).astype(np.uint8)
-        # output_heatmap = utils.grey_to_heatmap(output_grey)
 
         path, fn = os.path.split(img_id[0])
         img_id, ext = os.path.splitext(fn)

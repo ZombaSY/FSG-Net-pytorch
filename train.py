@@ -12,13 +12,25 @@ from models import model_implements
 from models import losses as loss_hub
 from models import metrics
 
-from datetime import datetime
-
 
 class Trainer_seg:
-    def __init__(self, args, now=None):
+    def __init__(self, args, now_time=None):
         self.start_time = time.time()
         self.args = args
+
+        # save hyper-parameters
+        if not self.args.debug:
+            with open(self.args.config_path, 'r') as f_r:
+                file_path = self.args.saved_model_directory + '/' + now_time
+                if not os.path.exists(file_path):
+                    os.makedirs(file_path)
+                with open(os.path.join(file_path, self.args.config_path.split('/')[-1]), 'w') as f_w:
+                    f_w.write(f_r.read())
+
+        if args.wandb:
+            # wandb.login(key='your_WandB_key')
+            wandb.init(project='{}'.format(args.project_name), config=args, name=now_time,
+                    settings=wandb.Settings(start_method="fork"))
 
         # Check cuda available and assign to device
         use_cuda = self.args.cuda and torch.cuda.is_available()
@@ -35,9 +47,9 @@ class Trainer_seg:
                                                   batch_size=1,
                                                   mode='validation')
 
-        self.model = self.__init_model(self.args.model_name)
-        self.optimizer = self._init_optimizer(self.args.optimizer, self.model, self.args.lr)
-        self.scheduler = self._set_scheduler(self.optimizer, self.args.scheduler, self.loader_train, self.args.batch_size)
+        self.model = self.init_model(self.args.model_name, self.device, self.args)
+        self.optimizer = self.__init_optimizer(self.args.optimizer, self.model, self.args.lr)
+        self.scheduler = self.__set_scheduler(self.optimizer, self.args.scheduler, self.loader_train, self.args.batch_size)
 
         if hasattr(self.args, 'model_path'):
             if self.args.model_path != '':
@@ -45,13 +57,13 @@ class Trainer_seg:
                 print('Model loaded successfully!!! (Custom)')
                 self.model.to(self.device)
 
-        self.criterion = self._init_criterion(self.args.criterion)
+        self.criterion = self.__init_criterion(self.args.criterion)
 
         if self.args.wandb:
             if self.args.mode == 'train':
                 wandb.watch(self.model)
 
-        now_time = now if now is not None else datetime.now().strftime("%Y%m%d %H%M%S")
+
         self.saved_model_directory = self.args.saved_model_directory + '/' + now_time
 
         self.metric_best = {'f1_score': 0}  # the 'value' follows the metric on validation
@@ -108,8 +120,6 @@ class Trainer_seg:
                                                                     loss_mean,
                                                                     self.optimizer.param_groups[0]['lr']))
 
-            torch.cuda.empty_cache()
-
         loss_mean = np.mean(batch_losses)
         print('{} epoch / Train Loss {} : {}, lr {}'.format(epoch,
                                                             self.args.criterion,
@@ -142,8 +152,6 @@ class Trainer_seg:
                 metric_result = metrics.metrics_np(output_argmax[:, 0], target.squeeze(0).detach().cpu().numpy(), b_auc=False)
                 f1_list.append(metric_result['f1'])
 
-            torch.cuda.empty_cache()
-
         f1_score = sum(f1_list) / len(f1_list)
         print('{} epoch / Val f1_score: {}'.format(epoch, f1_score))
         if self.args.wandb:
@@ -174,7 +182,7 @@ class Trainer_seg:
     def save_model(self, model, model_name, epoch, metric=None, best_flag=False, metric_name='metric'):
         file_path = self.saved_model_directory + '/'
 
-        file_format = file_path + model_name + '-Epoch-' + str(epoch) + '-' + metric_name + '-' + str(metric) + '.pt'
+        file_format = file_path + model_name + '-Epoch_' + str(epoch) + '-' + metric_name + '_' + str(metric) + '.pt'
 
         if not os.path.exists(file_path):
             os.mkdir(file_path)
@@ -214,12 +222,12 @@ class Trainer_seg:
 
         return torch.nn.DataParallel(model)
 
-    def init_criterion(self, criterion_name):
+    def __init_criterion(self, criterion_name):
         criterion = getattr(loss_hub, criterion_name)().to(self.device)
 
         return criterion
 
-    def _init_optimizer(self, optimizer_name, model, lr):
+    def __init_optimizer(self, optimizer_name, model, lr):
         optimizer = None
 
         if optimizer_name == 'AdamW':
@@ -228,7 +236,7 @@ class Trainer_seg:
 
         return optimizer
 
-    def _set_scheduler(self, optimizer, scheduler_name, data_loader, batch_size):
+    def __set_scheduler(self, optimizer, scheduler_name, data_loader, batch_size):
         scheduler = None
         steps_per_epoch = math.ceil((data_loader.__len__() / batch_size))
 

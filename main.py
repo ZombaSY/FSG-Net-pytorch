@@ -66,22 +66,11 @@ def main():
 
     os.environ["CUDA_VISIBLE_DEVICES"] = args.CUDA_VISIBLE_DEVICES
 
-    if args.wandb:
-        wandb.login(key='your_WandB_key')
-        wandb.init(project='{}'.format(args.project_name), config=args, name=now_time,
-                   settings=wandb.Settings(start_method="fork"))
+    if args.debug:
+        args.wandb = False
 
     print('Use CUDA :', args.cuda and is_available())
     if args.mode in 'train':
-
-        # save hyper-parameters
-        with open(args.config_path, 'r') as f_r:
-            file_path = args.saved_model_directory + '/' + now_time
-            if not os.path.exists(file_path):
-                os.makedirs(file_path)
-            with open(os.path.join(file_path, args.config_path.split('/')[-1]), 'w') as f_w:
-                f_w.write(f_r.read())
-
         if args.mode == 'train':
             if args.task == 'segmentation':
                 trainer = Trainer_seg(args, now_time)

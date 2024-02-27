@@ -1,31 +1,31 @@
 {
  ### Environment Parameters
+  debug: false,
   mode: train,
   cuda: true,
   pin_memory: true,
-  wandb: false,  # please check your wandb status
+  wandb: true,  # please check your wandb status
   worker: 8,
   log_interval: 9999,
   save_interval: 1,
   saved_model_directory: 'model_checkpoints',
   train_fold: 1,
-  project_name: 'U_Net_modernize',
+  project_name: 'neU-Net',
   CUDA_VISIBLE_DEVICES: '0',
 
   ### Train Parameters
   model_name: 'neUNet_v2',
-    num_class: 2,
-    in_channel: 3,
-    base_c: 16,
+    n_classes: 1,
+    in_channels: 3,
+    base_c: 64,
   dataloader: 'Image2Image_zero_pad',
-  n_classes: 2,
   criterion: 'DiceBCELoss',
   task: 'segmentation',
   input_space: 'RGB',
   input_channel: 3,
-  input_size: [1024, 1024],  # DRIVE:608, STARE:704, CHASEDB1:1024
+  input_size: [608, 608],  # DRIVE:608, STARE:704, CHASEDB1:1024
   optimizer: 'AdamW',
-    lr: 0.001,
+    lr: 0.005,
     scheduler: 'WarmupCosine',
     cycles: 100,
     warmup_epoch: 20,
@@ -45,8 +45,8 @@
   transform_rand_resize: true,
   transform_rand_crop: 288,
 
-  train_x_path: '/path/to/your/dataset/train/input',
-  train_y_path: '/path/to/your/dataset/train/label',
-  val_x_path: '/path/to/your/dataset/val/input',
-  val_y_path: '/path/to/your/dataset/val/label',
+  train_x_path: '/path/to/train/input',
+  train_y_path: '/path/to/train/label',
+  val_x_path:   '/path/to/val/input',
+  val_y_path:   '/path/to/val/label',
 }

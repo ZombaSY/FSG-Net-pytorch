@@ -17,6 +17,7 @@ from models.backbones import neUNet_v2 as neUNet_parts_v2
 
 class UNet(nn.Module):
     def __init__(self, in_channels=3, n_classes=2, bilinear=True, **kwargs):
+        super().__init__()
         self.n_channels = in_channels
         self.n_classes = n_classes
         self.bilinear = bilinear
@@ -51,6 +52,7 @@ class UNet(nn.Module):
 
 class UNet2P(nn.Module):
     def __init__(self, in_channels=3, n_classes=1, **kwargs):
+        super().__init__()
         self.unet2p = UNeTPluss.UNet_2Plus(in_channels=in_channels, n_classes=n_classes)
 
     def forward(self, x):
@@ -59,6 +61,7 @@ class UNet2P(nn.Module):
 
 class UNet3P_Deep(nn.Module):
     def __init__(self, in_channels=3, n_classes=1, **kwargs):
+        super().__init__()
         self.unet3p = UNeTPluss.UNet_3Plus_DeepSup(in_channels=in_channels, n_classes=n_classes)
 
     def forward(self, x):
@@ -67,6 +70,7 @@ class UNet3P_Deep(nn.Module):
 
 class ResUNet(nn.Module):
     def __init__(self, in_channels=3, n_classes=1, **kwargs):
+        super().__init__()
         self.resunet = ResUNets.ResUnet(channel=in_channels, n_classes=n_classes)
 
     def forward(self, x):
@@ -75,6 +79,7 @@ class ResUNet(nn.Module):
 
 class ResUNet2P(nn.Module):
     def __init__(self, in_channels=3, n_classes=1, **kwargs):
+        super().__init__()
         self.resunet2p = ResUNets.ResUnetPlusPlus(channel=in_channels, n_classes=n_classes)
 
     def forward(self, x):
@@ -83,6 +88,7 @@ class ResUNet2P(nn.Module):
 
 class SAUNet(nn.Module):
     def __init__(self, in_channels=3, n_classes=2, base_c=16, **kwargs):
+        super().__init__()
         self.sa_unet = SAUNets.SA_UNet(in_channels=in_channels, num_classes=n_classes, base_c=base_c)
 
     def forward(self, x):
@@ -91,6 +97,7 @@ class SAUNet(nn.Module):
 
 class DCSAU_UNet(nn.Module):
     def __init__(self, in_channels=3, n_classes=1, **kwargs):
+        super().__init__()
         self.dcsau_unet = DCSAUUNet.DCSAU_UNet(img_channels=in_channels, n_classes=n_classes)
 
     def forward(self, x):
@@ -99,6 +106,7 @@ class DCSAU_UNet(nn.Module):
 
 class AGNet(nn.Module):
     def __init__(self, in_channels=3, n_classes=2, **kwargs):
+        super().__init__()
         self.ag_net = AGNet_parts.AG_Net(in_channels=in_channels, n_classes=n_classes)
 
     def forward(self, x):
@@ -108,6 +116,7 @@ class AGNet(nn.Module):
 
 class ATTUNet(nn.Module):
     def __init__(self, in_channels=3, n_classes=1, **kwargs):
+        super().__init__()
         self.attu_net = R2UNet_parts.AttU_Net(img_ch=in_channels, output_ch=n_classes)
 
     def forward(self, x):
@@ -116,6 +125,7 @@ class ATTUNet(nn.Module):
 
 class R2UNet(nn.Module):
     def __init__(self, in_channels=3, n_classes=1, **kwargs):
+        super().__init__()
         self.r2unet = R2UNet_parts.R2U_Net(img_ch=in_channels, output_ch=n_classes)
 
     def forward(self, x):
@@ -124,6 +134,7 @@ class R2UNet(nn.Module):
 
 class ConvUNeXt(nn.Module):
     def __init__(self, in_channels, n_classes, base_c=32, **kwargs):
+        super().__init__()
         self.convunext = ConvUNeXt_parts.ConvUNeXt(in_channels=in_channels, num_classes=n_classes, base_c=base_c)
 
     def forward(self, x):
@@ -135,6 +146,7 @@ class ConvUNeXt(nn.Module):
 
 class FRUNet(nn.Module):
     def __init__(self, in_channels, n_classes, **kwargs):
+        super().__init__()
         self.frunet = FRUNet_parts.FR_UNet(num_channels=in_channels, num_classes=n_classes)
 
     def forward(self, x):
@@ -145,6 +157,7 @@ class FRUNet(nn.Module):
 
 class StripedWriNet(nn.Module):
     def __init__(self, in_channels, n_classes, base_c=24, **kwargs):
+        super().__init__()
         self.wrinnet = WrinNet_parts.StripedWriNet(n_channels=in_channels, n_classes=n_classes, init_c=base_c)
 
     def forward(self, x):
@@ -161,6 +174,7 @@ class neUNet(nn.Module):
                  base_c=64,
                  kernel_size=3,
                  **kwargs):
+        super().__init__()
         self.neunet = neUNet_parts.neUNet(in_channels, n_classes, base_c,
                                           depths=depths, kernel_size=kernel_size)
 
@@ -176,6 +190,7 @@ class neUNet_v2(nn.Module):
                  base_c=64,
                  kernel_size=3,
                  **kwargs):
+        super().__init__()
         self.neunet = neUNet_parts_v2.neUNet(in_channels, n_classes, base_c, depths=depths, kernel_size=kernel_size)
 
     def forward(self, x):

@@ -88,12 +88,13 @@ class Image2ImageLoader_zero_pad(Dataset):
         assert len(self.img_x_path) == len(self.img_y_path), 'Images in directory must have same file indices!!'
 
         print(f'{utils.Colors.LIGHT_RED}Mounting data on memory...{self.__class__.__name__}:{self.mode}{utils.Colors.END}')
-        self.memory_data_y = []
-        for index in range(len(self.x_img_path)):
+        self.img_x = []
+        self.img_y = []
+        for index in range(len(self.img_x_path)):
             x_path = self.img_x_path[index]
             y_path = self.img_y_path[index]
-            self.img_x = Image.open(x_path).convert('RGB')
-            self.img_y = Image.open(y_path).convert('L')
+            self.img_x.append(Image.open(x_path).convert('RGB'))
+            self.img_y.append(Image.open(y_path).convert('L'))
 
     def transform(self, image, target):
         if self.mode == 'validation':
@@ -105,8 +106,8 @@ class Image2ImageLoader_zero_pad(Dataset):
 
             if (random_gen.random() < 0.8) and self.args.transform_cutmix:
                 rand_n = random_gen.randint(0, self.__len__() - 1)     # randomly generates reference image on dataset
-                image_refer = Image.open(self.x_img_path[rand_n]).convert('RGB')
-                target_refer = Image.open(self.y_img_path[rand_n]).convert('L')
+                image_refer = Image.open(self.img_x_path[rand_n]).convert('RGB')
+                target_refer = Image.open(self.img_y_path[rand_n]).convert('L')
                 image, target = utils.cut_mix(image, target, image_refer, target_refer)
 
             if (random_gen.random() < 0.8) and self.args.transform_rand_resize:
@@ -159,7 +160,7 @@ class Image2ImageLoader_zero_pad(Dataset):
                                         mean=self.image_mean,
                                         std=self.image_std)
 
-        if self.args.num_class <= 2:  # for visualized binary GT
+        if self.args.n_classes <= 2:  # for visualized binary GT
             target_tensor[target_tensor < 128] = 0
             target_tensor[target_tensor >= 128] = 1
         target_tensor = target_tensor.unsqueeze(0)    # expand 'grey channel' for loss function dependency
@@ -172,7 +173,7 @@ class Image2ImageLoader_zero_pad(Dataset):
         return (img_x_tr, self.img_x_path[index]), (img_y_tr, self.img_y_path[index])
 
     def __len__(self):
-        return self.len
+        return len(self.img_x_path)
 
 
 class Image2ImageDataLoader_zero_pad:

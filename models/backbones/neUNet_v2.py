@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import math
 
 from torch.autograd import Variable
 from torchvision.transforms import Resize
@@ -35,12 +36,12 @@ class DropBlock(nn.Module):
 
 
 class CrossAttentionBlock(nn.Module):
-    def __init__(self, in_channels):
+    def __init__(self, in_channels, gating_channels):
         super(CrossAttentionBlock, self).__init__()
 
         self.inter_channels = in_channels
         self.in_channels = in_channels
-        self.gating_channels = in_channels
+        self.gating_channels = gating_channels
 
         self.theta = nn.Sequential(
             nn.Conv2d(in_channels=self.in_channels, out_channels=self.inter_channels, kernel_size=1),
@@ -458,8 +459,8 @@ class neUNet(nn.Module):
             *[ConvNext(base_c * 8, kernel_size=kernel_size) for _ in range(depths[3])]
             ])
 
-        self.msa = MSA(base_c, base_c * 2, base_c * 4, base_c * 8)
-        self.gsa = GSA(base_c, base_c * 2, base_c * 4, base_c * 8, base_c * 2)
+        self.msa = MSA(base_c * 2, base_c * 4, base_c * 8, base_c * 8)
+        self.gsa = GSA(base_c * 2, base_c * 4, base_c * 8, base_c * 8, out_channels=base_c * 8)
 
         self.up_residual_conv3 = ResidualConv(base_c * 8, base_c * 4, 1, 1)
         self.up_residual_conv2 = ResidualConv(base_c * 4, base_c * 2, 1, 1)
@@ -479,13 +480,13 @@ class neUNet(nn.Module):
         )
 
         self.fgf = FastGuidedFilter_attention(r=2, eps=1e-2)
-        self.attention_block3 = CrossAttentionBlock(in_channels=base_c * 8)
-        self.attention_block2 = CrossAttentionBlock(in_channels=base_c * 4)
-        self.attention_block1 = CrossAttentionBlock(in_channels=base_c * 2)
+        self.attention_block3 = CrossAttentionBlock(in_channels=base_c * 8, gating_channels=base_c * 8)
+        self.attention_block2 = CrossAttentionBlock(in_channels=base_c * 4, gating_channels=base_c * 4)
+        self.attention_block1 = CrossAttentionBlock(in_channels=base_c * 2, gating_channels=base_c * 2)
 
         self.conv_cat_3 = M_Conv(base_c * 8 + base_c * 8, base_c * 8, kernel_size=1)
-        self.conv_cat_2 = M_Conv(base_c * 8 + base_c * 4, base_c * 4, kernel_size=1)
-        self.conv_cat_1 = M_Conv(base_c * 4 + base_c * 2, base_c * 2, kernel_size=1)
+        self.conv_cat_2 = M_Conv(base_c * 8 + base_c * 8, base_c * 4, kernel_size=1)
+        self.conv_cat_1 = M_Conv(base_c * 4 + base_c * 8, base_c * 2, kernel_size=1)
 
     def forward(self, x):
         # Get multi-scale from input
