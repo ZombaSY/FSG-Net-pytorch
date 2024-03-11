@@ -11,6 +11,7 @@ from models import lr_scheduler
 from models import model_implements
 from models import losses as loss_hub
 from models import metrics
+from models import utils
 
 
 class Trainer_seg:
@@ -30,7 +31,7 @@ class Trainer_seg:
         if args.wandb:
             # wandb.login(key='your_WandB_key')
             wandb.init(project='{}'.format(args.project_name), config=args, name=now_time,
-                    settings=wandb.Settings(start_method="fork"))
+                       settings=wandb.Settings(start_method="fork"))
 
         # Check cuda available and assign to device
         use_cuda = self.args.cuda and torch.cuda.is_available()
@@ -53,7 +54,7 @@ class Trainer_seg:
 
         if hasattr(self.args, 'model_path'):
             if self.args.model_path != '':
-                self.model.load_state_dict(torch.load(self.args.model_path))
+                self.model.load_state_dict(torch.load(self.args.model_path), strict=False)
                 print('Model loaded successfully!!! (Custom)')
                 self.model.to(self.device)
 
@@ -63,7 +64,6 @@ class Trainer_seg:
             if self.args.mode == 'train':
                 wandb.watch(self.model)
 
-
         self.saved_model_directory = self.args.saved_model_directory + '/' + now_time
 
         self.metric_best = {'f1_score': 0}  # the 'value' follows the metric on validation
@@ -72,13 +72,23 @@ class Trainer_seg:
 
         self.__validate_interval = 1 if (self.loader_train.__len__() // self.args.train_fold) == 0 else self.loader_train.__len__() // self.args.train_fold
 
+        self.callback = utils.TrainerCallBack()
+        if hasattr(self.model.module, 'train_callback'):
+            self.callback.train_callback = self.model.module.train_callback
+            print('train_callback adapted.')
+        if hasattr(self.model.module, 'iteration_callback'):
+            self.callback.iteration_callback = self.model.module.iteration_callback
+            print('iteration_callback adapted.')
+
     def _train(self, epoch):
         self.model.train()
+        self.callback.train_callback()
         batch_losses = []
         f1_list = []
 
         print('Start Train')
         for batch_idx, (x_in, target) in enumerate(self.loader_train.Loader):
+            self.callback.iteration_callback()
             if (x_in[0].shape[0] / torch.cuda.device_count()) <= torch.cuda.device_count():   # if has 1 batch per GPU
                 break   # avoid BN issue
 

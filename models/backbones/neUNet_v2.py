@@ -1,10 +1,8 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import math
 
 from torch.autograd import Variable
-from torchvision.transforms import Resize
 
 
 class DropBlock(nn.Module):
@@ -35,13 +33,28 @@ class DropBlock(nn.Module):
         return x
 
 
+class SelfAttentionBlock(nn.Module):
+    def __init__(self):
+        super(SelfAttentionBlock, self).__init__()
+        self.conv = nn.Conv2d(2, 1, kernel_size=7, stride=1, padding=3)
+
+    def forward(self, x):
+        x1 = torch.mean(x, dim=1, keepdim=True)
+        x2, _ = torch.max(x, dim=1, keepdim=True)
+        x3 = torch.cat((x1, x2), dim=1)
+        x4 = torch.sigmoid(self.conv(x3))
+        x = x4 * x
+        assert len(x.shape) == 4
+        return x
+
+
 class CrossAttentionBlock(nn.Module):
-    def __init__(self, in_channels, gating_channels):
+    def __init__(self, in_channels):
         super(CrossAttentionBlock, self).__init__()
 
         self.inter_channels = in_channels
         self.in_channels = in_channels
-        self.gating_channels = gating_channels
+        self.gating_channels = in_channels
 
         self.theta = nn.Sequential(
             nn.Conv2d(in_channels=self.in_channels, out_channels=self.inter_channels, kernel_size=1),
@@ -71,145 +84,6 @@ class CrossAttentionBlock(nn.Module):
         psi_f = self.psi(f)
 
         return psi_f
-
-
-class DoubleConvStriped(nn.Module):
-    """Striped Conv"""
-
-    def __init__(self, in_channels, out_channels,kernel_size = 3):
-        super().__init__()
-        self.double_conv = nn.Sequential(
-            nn.Conv2d(in_channels, in_channels, kernel_size=(1, kernel_size), padding=(0, kernel_size//2), bias=False),
-            nn.Conv2d(out_channels, out_channels, kernel_size=(kernel_size, 1), padding=(kernel_size//2, 0), bias=False),
-            nn.BatchNorm2d(out_channels),
-            nn.ReLU(inplace=True),
-        )
-    def forward(self, x):
-        return self.double_conv(x)
-
-
-class MSABlock(nn.Module):
-    """MSA block"""
-
-    def __init__(self,channels):
-        super().__init__()
-        self.strip_conv1 = DoubleConvStriped(channels,channels,kernel_size=3)
-        self.strip_conv2 = DoubleConvStriped(channels,channels,kernel_size=7)
-        self.strip_conv3 = DoubleConvStriped(channels,channels,kernel_size=11)
-        self.conv1x1 = nn.Conv2d(3*channels, 1, kernel_size=1,bias=False)
-        self.attn_func = nn.Sigmoid()
-
-    def forward(self, x):
-        strip1 = self.strip_conv1(x)
-        strip2 = self.strip_conv2(x)
-        strip3 = self.strip_conv3(x)
-        strip_concat = torch.cat([strip1,strip2,strip3],dim=1)
-        attn = self.attn_func(self.conv1x1(strip_concat))
-        out = attn*x
-        return out
-
-
-class MSA(nn.Module):
-    """MSA"""
-
-    def __init__(self,c1,c2,c3,c4):
-        super().__init__()
-        self.msa_1 = MSABlock(c1)
-        self.msa_2 = MSABlock(c2)
-        self.msa_3 = MSABlock(c3)
-        self.msa_4 = MSABlock(c4)
-
-    def forward(self, x1,x2,x3,x4):
-        x1_ = self.msa_1(x1)
-        x2_ = self.msa_2(x2)
-        x3_ = self.msa_3(x3)
-        x4_ = self.msa_4(x4)
-        return x1_,x2_,x3_,x4_
-
-
-class HorizontalAttention(nn.Module):
-    def __init__(self,channels,out_channels):
-        super(HorizontalAttention,self).__init__()
-        self.channels = channels
-        self.out_channels = out_channels
-        self.l1 = nn.Linear(self.channels,self.out_channels)
-        self.l2 = nn.Linear(self.channels,self.out_channels)
-        self.l3 = nn.Linear(self.channels,self.out_channels)
-
-    def forward(self, x,H,W):
-        strip_pooling = nn.AdaptiveAvgPool2d((1, W))
-        strip_x = strip_pooling(x).reshape(x.shape[0],-1,W)
-        strip_x = strip_x.transpose(2,1)  # b w c
-
-        Q = self.l1(strip_x) # b w c
-        K = self.l2(strip_x) # b w c
-        V = self.l3(strip_x) # b w c
-        qk = torch.matmul(Q, K.transpose(2,1))
-        qk = qk / math.sqrt(self.out_channels)
-        qk = nn.Softmax(dim=-1)(qk)
-        qkv = torch.matmul(qk, V)
-        qkv = qkv.transpose(2,1)
-        qkv = torch.unsqueeze(qkv,dim=2)
-        qkv_expend = qkv.expand((-1,-1,H,-1))
-        return qkv_expend
-
-
-class VerticalAttention(nn.Module):
-    def __init__(self,channels,out_channels):
-        super().__init__()
-        self.channels = channels
-        self.out_channels = out_channels
-        self.l1 = nn.Linear(self.channels,self.out_channels)
-        self.l2 = nn.Linear(self.channels,self.out_channels)
-        self.l3 = nn.Linear(self.channels,self.out_channels)
-
-
-    def forward(self, x,H,W):
-        strip_pooling = nn.AdaptiveMaxPool2d((H,1))
-        strip_x = strip_pooling(x).reshape(x.shape[0],-1,H)
-        strip_x = strip_x.transpose(2,1)  # b H c
-        Q = self.l1(strip_x) # b w c
-        K = self.l2(strip_x) # b w c
-        V = self.l3(strip_x) # b w c
-        qk = torch.matmul(Q, K.transpose(2,1))
-        qk = qk / math.sqrt(self.out_channels)
-        qk = nn.Softmax(dim=-1)(qk)
-        qkv = torch.matmul(qk, V)
-        qkv = qkv.transpose(2,1)
-        qkv = torch.unsqueeze(qkv,dim=3)
-        qkv_expend = qkv.expand((-1,-1,-1,W))
-        return qkv_expend
-
-
-class GSA(nn.Module):
-    """GSA"""
-    def __init__(self,c1,c2,c3,c4,out_channels):
-        super().__init__()
-        self.conv1x1 = nn.Conv2d(c1+c2+c3+c4, out_channels, kernel_size=1,bias=False)
-        self.c1 = c1
-        self.c2 = c2
-        self.c3 = c3
-        self.c4 = c4
-        self.out_channels = out_channels
-        self.horizontal_attention = HorizontalAttention(out_channels,self.out_channels)
-        self.vertical_attention = VerticalAttention(out_channels,self.out_channels)
-
-    def forward(self, x1,x2,x3,x4):
-        t_h, t_w = x1.shape[-2:]
-        up = nn.Upsample(size=(t_h, t_w), mode='bilinear', align_corners=True)
-        x2_ = up(x2)
-        x3_ = up(x3)
-        x4_ = up(x4)
-        x_concat = torch.cat([x1,x2_,x3_,x4_],dim=1)
-        x_concat_ = self.conv1x1(x_concat)
-        hor_attn = self.horizontal_attention(x_concat_,t_h, t_w)
-        ver_attn = self.vertical_attention(x_concat_,t_h, t_w)
-        out = hor_attn+ver_attn+x_concat_
-        x1_out = out
-        x2_out = Resize(x2.shape[-2:])(out)
-        x3_out = Resize(x3.shape[-2:])(out)
-        x4_out = Resize(x4.shape[-2:])(out)
-        return x1_out,x2_out,x3_out,x4_out
 
 
 class M_Conv(nn.Module):
@@ -430,8 +304,22 @@ class AttentionBlock(nn.Module):
 
 
 class neUNet(nn.Module):
-    def __init__(self, channel, n_classes, base_c, depths, kernel_size):
+    def __init__(self, channel, n_classes, base_c, depths, kernel_size, is_train=True, non_linear=True):
         super(neUNet, self).__init__()
+
+        self.post_projection = nn.Sequential(*[
+            nn.Conv2d(3, 2, kernel_size=1, bias=False),
+            nn.ReLU() if non_linear else nn.Identity(),
+            nn.Conv2d(2, 3, kernel_size=1, bias=False),
+            nn.ReLU() if non_linear else nn.Identity(),
+        ])
+
+        # can be updated
+        params = [-0.49403217, -0.57345206, -0.65351737, 0.76348513, 0.07347065, -0.6416327]
+        if is_train:
+            param_tensor = torch.Tensor(params[:2 * 3]).view(2, 3, 1, 1)
+            self.post_projection[0].weight.data = param_tensor
+            self.post_projection[2].weight.data = torch.transpose(param_tensor, 0, 1)
 
         self.input_layer = nn.Sequential(
             M_Conv(channel, base_c * 1, kernel_size=kernel_size),
@@ -458,9 +346,7 @@ class neUNet(nn.Module):
             nn.Conv2d(base_c * 8, base_c * 8, kernel_size=2, stride=2),
             *[ConvNext(base_c * 8, kernel_size=kernel_size) for _ in range(depths[3])]
             ])
-
-        self.msa = MSA(base_c * 2, base_c * 4, base_c * 8, base_c * 8)
-        self.gsa = GSA(base_c * 2, base_c * 4, base_c * 8, base_c * 8, out_channels=base_c * 8)
+        self.attn = SelfAttentionBlock()
 
         self.up_residual_conv3 = ResidualConv(base_c * 8, base_c * 4, 1, 1)
         self.up_residual_conv2 = ResidualConv(base_c * 4, base_c * 2, 1, 1)
@@ -480,17 +366,20 @@ class neUNet(nn.Module):
         )
 
         self.fgf = FastGuidedFilter_attention(r=2, eps=1e-2)
-        self.attention_block3 = CrossAttentionBlock(in_channels=base_c * 8, gating_channels=base_c * 8)
-        self.attention_block2 = CrossAttentionBlock(in_channels=base_c * 4, gating_channels=base_c * 4)
-        self.attention_block1 = CrossAttentionBlock(in_channels=base_c * 2, gating_channels=base_c * 2)
+        self.attention_block3 = CrossAttentionBlock(in_channels=base_c * 8)
+        self.attention_block2 = CrossAttentionBlock(in_channels=base_c * 4)
+        self.attention_block1 = CrossAttentionBlock(in_channels=base_c * 2)
 
         self.conv_cat_3 = M_Conv(base_c * 8 + base_c * 8, base_c * 8, kernel_size=1)
-        self.conv_cat_2 = M_Conv(base_c * 8 + base_c * 8, base_c * 4, kernel_size=1)
-        self.conv_cat_1 = M_Conv(base_c * 4 + base_c * 8, base_c * 2, kernel_size=1)
+        self.conv_cat_2 = M_Conv(base_c * 8 + base_c * 4, base_c * 4, kernel_size=1)
+        self.conv_cat_1 = M_Conv(base_c * 4 + base_c * 2, base_c * 2, kernel_size=1)
 
     def forward(self, x):
         # Get multi-scale from input
         _, _, h, w = x.size()
+
+        x = self.post_projection(x)
+
         x_scale_2 = F.interpolate(x, size=(h // 2, w // 2), mode='bilinear', align_corners=True)
         x_scale_3 = F.interpolate(x, size=(h // 4, w // 4), mode='bilinear', align_corners=True)
 
@@ -508,10 +397,7 @@ class neUNet(nn.Module):
         x3_down = torch.cat([x3_conv, x3], dim=1)
 
         x4 = self.down_conv_4(x3_down)
-
-        # Bottleneck bridge
-        x1_down, x2_down, x3_down, x4 = self.msa(x1_down, x2_down, x3_down, x4)
-        x1_down, x2_down, x3_down, x4 = self.gsa(x1_down, x2_down, x3_down, x4)
+        x4 = self.attn(x4)
 
         # Decoder
         _, _, h, w = x3_down.size()

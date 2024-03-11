@@ -158,3 +158,12 @@ def remove_center_padding(img):
     assert target_size[0] == out_h and target_size[1] == out_w, 'target_size should be same with input_size'
 
     return tensor_unpadded if is_tensor else tf.to_pil_image(tensor_unpadded)
+
+
+class TrainerCallBack:
+
+    def train_callback(self):
+        pass
+
+    def iteration_callback(self):
+        pass

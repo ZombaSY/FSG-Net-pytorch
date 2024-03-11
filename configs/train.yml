@@ -14,27 +14,30 @@
   CUDA_VISIBLE_DEVICES: '0',
 
   ### Train Parameters
-  model_name: 'neUNet_v2',
+  model_name: 'neUNet_v3',
     n_classes: 1,
     in_channels: 3,
     base_c: 64,
+    non_linear: false,
+    project_dim: 2,
   dataloader: 'Image2Image_zero_pad',
-  criterion: 'DiceBCELoss',
+  criterion: 'DiceBCELoss', # DiceBCELoss
   task: 'segmentation',
   input_space: 'RGB',
   input_channel: 3,
   input_size: [608, 608],  # DRIVE:608, STARE:704, CHASEDB1:1024
   optimizer: 'AdamW',
-    lr: 0.005,
-    scheduler: 'WarmupCosine',
+    lr: 0.001,
+    scheduler: 'WarmupCosine',  # ConstantLRSchedule, WarmupCosine
     cycles: 100,
     warmup_epoch: 20,
-    weight_decay: 0.05,
+    weight_decay: 0.05, # 0.05
   batch_size: 4,
   epoch: 10000,
   ema_decay: 0, # set 0 to deactivate
   class_weight: [1.0, 1.0],
-  model_path: '',  # set empty to deactivate
+  model_path: '', # pretrained/neUNet_DRIVE.pt
+    freeze_layer: false,
 
    ### Augmentation Parameters
   transform_blur: true,
@@ -45,8 +48,8 @@
   transform_rand_resize: true,
   transform_rand_crop: 288,
 
-  train_x_path: '/path/to/train/input',
-  train_y_path: '/path/to/train/label',
-  val_x_path:   '/path/to/val/input',
-  val_y_path:   '/path/to/val/label',
+  train_x_path: '/lulu_data/data/ssy/public/DRIVE/Sunyong/train/input',
+  train_y_path: '/lulu_data/data/ssy/public/DRIVE/Sunyong/train/label',
+  val_x_path:   '/lulu_data/data/ssy/public/DRIVE/Sunyong/val/input',
+  val_y_path:   '/lulu_data/data/ssy/public/DRIVE/Sunyong/val/label',
 }

@@ -268,7 +268,6 @@ class StripedWriNet(nn.Module):
         x4 = self.down3(x3)
         x5 = self.down4(x4)
 
-        import pdb; pdb.set_trace()
         x1, x2, x3, x4 = self.msa(x1,x2,x3,x4)
         x1, x2, x3, x4 = self.gsa(x1,x2,x3,x4)
 

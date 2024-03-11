@@ -304,8 +304,22 @@ class AttentionBlock(nn.Module):
 
 
 class neUNet(nn.Module):
-    def __init__(self, channel, n_classes, base_c, depths, kernel_size):
+    def __init__(self, channel, n_classes, base_c, depths, kernel_size, is_train=True, non_linear=True, project_dim=2):
         super(neUNet, self).__init__()
+
+        self.post_projection = nn.Sequential(*[
+            nn.Conv2d(3, project_dim, kernel_size=1, bias=False),
+            nn.ReLU() if non_linear else nn.Identity(),
+            nn.Conv2d(project_dim, 3, kernel_size=1, bias=False),
+            nn.ReLU() if non_linear else nn.Identity(),
+        ])
+
+        # acquired from PCA
+        params = [-0.49403217, -0.57345206, -0.65351737, 0.76348513, 0.07347065, -0.6416327]
+        if is_train:
+            param_tensor = torch.Tensor(params[:2 * 3]).view(2, 3, 1, 1)
+            self.post_projection[0].weight.data = param_tensor
+            self.post_projection[2].weight.data = torch.transpose(param_tensor, 0, 1)
 
         self.input_layer = nn.Sequential(
             M_Conv(channel, base_c * 1, kernel_size=kernel_size),
@@ -363,6 +377,8 @@ class neUNet(nn.Module):
     def forward(self, x):
         # Get multi-scale from input
         _, _, h, w = x.size()
+
+        x = self.post_projection(x)
 
         x_scale_2 = F.interpolate(x, size=(h // 2, w // 2), mode='bilinear', align_corners=True)
         x_scale_3 = F.interpolate(x, size=(h // 4, w // 4), mode='bilinear', align_corners=True)

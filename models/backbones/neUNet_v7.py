@@ -33,19 +33,19 @@ class DropBlock(nn.Module):
         return x
 
 
-class SelfAttentionBlock(nn.Module):
-    def __init__(self):
-        super(SelfAttentionBlock, self).__init__()
-        self.conv = nn.Conv2d(2, 1, kernel_size=7, stride=1, padding=3)
+class DoubleConvStriped(nn.Module):
+    """Striped Conv"""
 
+    def __init__(self, in_channels, out_channels,kernel_size = 3):
+        super().__init__()
+        self.double_conv = nn.Sequential(
+            nn.Conv2d(in_channels, in_channels, kernel_size=(1, kernel_size), padding=(0, kernel_size//2), bias=False),
+            nn.Conv2d(out_channels, out_channels, kernel_size=(kernel_size, 1), padding=(kernel_size//2, 0), bias=False),
+            nn.BatchNorm2d(out_channels),
+            # nn.ReLU(inplace=True),
+        )
     def forward(self, x):
-        x1 = torch.mean(x, dim=1, keepdim=True)
-        x2, _ = torch.max(x, dim=1, keepdim=True)
-        x3 = torch.cat((x1, x2), dim=1)
-        x4 = torch.sigmoid(self.conv(x3))
-        x = x4 * x
-        assert len(x.shape) == 4
-        return x
+        return self.double_conv(x)
 
 
 class CrossAttentionBlock(nn.Module):
@@ -57,12 +57,10 @@ class CrossAttentionBlock(nn.Module):
         self.gating_channels = in_channels
 
         self.theta = nn.Sequential(
-            nn.Conv2d(in_channels=self.in_channels, out_channels=self.inter_channels, kernel_size=1),
-            nn.BatchNorm2d(self.inter_channels),
+            DoubleConvStriped(in_channels=self.in_channels, out_channels=self.inter_channels, kernel_size=1)
         )
         self.phi = nn.Sequential(
-            nn.Conv2d(in_channels=self.gating_channels, out_channels=self.inter_channels, kernel_size=1, stride=1, padding=0, bias=True),
-            nn.BatchNorm2d(self.inter_channels),
+            DoubleConvStriped(in_channels=self.in_channels, out_channels=self.inter_channels, kernel_size=1)
         )
         self.psi = nn.Sequential(
             nn.Conv2d(in_channels=self.inter_channels, out_channels=1, kernel_size=1, stride=1, padding=0, bias=True),
@@ -84,6 +82,21 @@ class CrossAttentionBlock(nn.Module):
         psi_f = self.psi(f)
 
         return psi_f
+
+
+class SelfAttentionBlock(nn.Module):
+    def __init__(self):
+        super(SelfAttentionBlock, self).__init__()
+        self.conv = nn.Conv2d(2, 1, kernel_size=7, stride=1, padding=3)
+
+    def forward(self, x):
+        x1 = torch.mean(x, dim=1, keepdim=True)
+        x2, _ = torch.max(x, dim=1, keepdim=True)
+        x3 = torch.cat((x1, x2), dim=1)
+        x4 = torch.sigmoid(self.conv(x3))
+        x = x4 * x
+        assert len(x.shape) == 4
+        return x
 
 
 class M_Conv(nn.Module):

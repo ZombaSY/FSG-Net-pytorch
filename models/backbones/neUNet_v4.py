@@ -33,19 +33,58 @@ class DropBlock(nn.Module):
         return x
 
 
-class SelfAttentionBlock(nn.Module):
-    def __init__(self):
-        super(SelfAttentionBlock, self).__init__()
-        self.conv = nn.Conv2d(2, 1, kernel_size=7, stride=1, padding=3)
+class DoubleConvStriped(nn.Module):
+    """Striped Conv"""
+
+    def __init__(self, in_channels, out_channels,kernel_size = 3):
+        super().__init__()
+        self.double_conv = nn.Sequential(
+            nn.Conv2d(in_channels, in_channels, kernel_size=(1, kernel_size), padding=(0, kernel_size//2), bias=False),
+            nn.Conv2d(out_channels, out_channels, kernel_size=(kernel_size, 1), padding=(kernel_size//2, 0), bias=False),
+            nn.BatchNorm2d(out_channels),
+            nn.ReLU(inplace=True),
+        )
+    def forward(self, x):
+        return self.double_conv(x)
+
+
+class MSABlock(nn.Module):
+    """MSA block"""
+
+    def __init__(self,channels):
+        super().__init__()
+        self.strip_conv1 = DoubleConvStriped(channels,channels,kernel_size=3)
+        self.strip_conv2 = DoubleConvStriped(channels,channels,kernel_size=7)
+        self.strip_conv3 = DoubleConvStriped(channels,channels,kernel_size=11)
+        self.conv1x1 = nn.Conv2d(3*channels, 1, kernel_size=1,bias=False)
+        self.attn_func = nn.Sigmoid()
 
     def forward(self, x):
-        x1 = torch.mean(x, dim=1, keepdim=True)
-        x2, _ = torch.max(x, dim=1, keepdim=True)
-        x3 = torch.cat((x1, x2), dim=1)
-        x4 = torch.sigmoid(self.conv(x3))
-        x = x4 * x
-        assert len(x.shape) == 4
-        return x
+        strip1 = self.strip_conv1(x)
+        strip2 = self.strip_conv2(x)
+        strip3 = self.strip_conv3(x)
+        strip_concat = torch.cat([strip1,strip2,strip3],dim=1)
+        attn = self.attn_func(self.conv1x1(strip_concat))
+        out = attn*x
+        return out
+
+
+class MSA(nn.Module):
+    """MSA"""
+
+    def __init__(self,c1,c2,c3,c4):
+        super().__init__()
+        self.msa_1 = MSABlock(c1)
+        self.msa_2 = MSABlock(c2)
+        self.msa_3 = MSABlock(c3)
+        self.msa_4 = MSABlock(c4)
+
+    def forward(self, x1,x2,x3,x4):
+        x1_ = self.msa_1(x1)
+        x2_ = self.msa_2(x2)
+        x3_ = self.msa_3(x3)
+        x4_ = self.msa_4(x4)
+        return x1_,x2_,x3_,x4_
 
 
 class CrossAttentionBlock(nn.Module):
@@ -332,7 +371,7 @@ class neUNet(nn.Module):
             nn.Conv2d(base_c * 8, base_c * 8, kernel_size=2, stride=2),
             *[ConvNext(base_c * 8, kernel_size=kernel_size) for _ in range(depths[3])]
             ])
-        self.attn = SelfAttentionBlock()
+        self.attn = MSA(base_c * 2, base_c * 4, base_c * 8, base_c * 8)
 
         self.up_residual_conv3 = ResidualConv(base_c * 8, base_c * 4, 1, 1)
         self.up_residual_conv2 = ResidualConv(base_c * 4, base_c * 2, 1, 1)
@@ -381,7 +420,7 @@ class neUNet(nn.Module):
         x3_down = torch.cat([x3_conv, x3], dim=1)
 
         x4 = self.down_conv_4(x3_down)
-        x4 = self.attn(x4)
+        x1_down, x2_down, x3_down, x4 = self.attn(x1_down, x2_down, x3_down, x4)
 
         # Decoder
         _, _, h, w = x3_down.size()
