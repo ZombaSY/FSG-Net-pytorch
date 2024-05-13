@@ -4,7 +4,7 @@
   mode: train,
   cuda: true,
   pin_memory: true,
-  wandb: true,
+  wandb: true,  # please check your wandb status
   worker: 8,
   log_interval: 9999,
   save_interval: 1,

@@ -59,7 +59,7 @@ class Inferencer:
                 metric_result = self.post_process(output, target, x_img, img_id)
                 f1_list.append(metric_result['f1'])
                 acc_list.append(metric_result['acc'])
-                auc_list.append(metric_result['auc'])
+                # auc_list.append(metric_result['auc'])
                 sen_list.append(metric_result['sen'])
                 mcc_list.append(metric_result['mcc'])
                 miou_list.append(metric_result['iou'])
@@ -67,7 +67,7 @@ class Inferencer:
         print('mean mIoU', sum(miou_list) / len(miou_list))
         print('mean F1 score:', sum(f1_list) / len(f1_list))
         print('mean Accuracy', sum(acc_list) / len(acc_list))
-        print('mean AUC', sum(auc_list) / len(auc_list))
+        # print('mean AUC', sum(auc_list) / len(auc_list))
         print('mean Sensitivity', sum(sen_list) / len(sen_list))
         print('mean MCC', sum(mcc_list) / len(mcc_list))
 
@@ -97,7 +97,7 @@ class Inferencer:
         Image.fromarray((output_argmax.squeeze().numpy() * 255).astype(np.uint8)).save(save_dir + img_id + f'_argmax.png', quality=100)
         # Image.fromarray(output_heatmap.astype(np.uint8)).save(save_dir + img_id + f'_heatmap_overlay.png', quality=100)
 
-        metric_result = metrics.metrics_np(output_argmax[None, :], target.squeeze(0).detach().cpu().numpy(), b_auc=True)
+        metric_result = metrics.metrics_np(output_argmax[None, :], target.squeeze(0).detach().cpu().numpy(), b_auc=False)
         print(f'{img_id} \t Done !!')
 
         return metric_result
@@ -127,8 +127,8 @@ class Inferencer:
             model = model_implements.ConvUNeXt(n_classes=1, in_channels=self.args.input_channel)
         elif model_name == 'FRUNet':
             model = model_implements.FRUNet(n_classes=1, in_channels=self.args.input_channel)
-        elif model_name == 'neUNet':
-            model = model_implements.neUNet(n_classes=1, in_channels=self.args.input_channel)
+        elif model_name == 'FSGNet':
+            model = model_implements.FSGNet(n_classes=1, in_channels=self.args.input_channel)
         else:
             raise Exception('No model named', model_name)
 

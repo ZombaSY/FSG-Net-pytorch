@@ -4,7 +4,7 @@
   mode: train,
   cuda: true,
   pin_memory: true,
-  wandb: true,
+  wandb: true,  # please check your wandb status
   worker: 8,
   log_interval: 9999,
   save_interval: 1,
@@ -14,7 +14,7 @@
   CUDA_VISIBLE_DEVICES: '0',
 
   ### Train Parameters
-  model_name: 'AGNet',
+  model_name: 'FSGNet',
     n_classes: 1,
     in_channels: 3,
   dataloader: 'Image2Image_zero_pad',
@@ -45,8 +45,8 @@
   transform_rand_resize: true,
   transform_rand_crop: 288,
 
-  train_x_path: '/path/to/train/input',
-  train_y_path: '/path/to/train/label',
-  val_x_path:   '/path/to/valid/input',
-  val_y_path:   '/path/to/valid/label',
+  train_x_path: '//lulu_data/data/ssy/public/DRIVE/Sunyong/train/input',
+  train_y_path: '//lulu_data/data/ssy/public/DRIVE/Sunyong/train/label',
+  val_x_path:   '//lulu_data/data/ssy/public/DRIVE/Sunyong/val/input',
+  val_y_path:   '//lulu_data/data/ssy/public/DRIVE/Sunyong/val/label',
 }

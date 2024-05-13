@@ -303,9 +303,9 @@ class AttentionBlock(nn.Module):
         return out * x2
 
 
-class neUNet(nn.Module):
+class FSGNet(nn.Module):
     def __init__(self, channel, n_classes, base_c, depths, kernel_size):
-        super(neUNet, self).__init__()
+        super(FSGNet, self).__init__()
 
         self.input_layer = nn.Sequential(
             M_Conv(channel, base_c * 1, kernel_size=kernel_size),

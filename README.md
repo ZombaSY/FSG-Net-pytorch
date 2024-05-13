@@ -1,4 +1,4 @@
-# [Official] [Renewing U-Net Design in Retinal Vessel Segmentation]
+# [Official] [Full Scale Guided Network for Retinal Vessel Segmentation]
 
 
 ## Environment
@@ -42,7 +42,7 @@ For train/validation set, you can download from public link or divided dataset b
 
 If you have installed 'WandB', login your ID in command line.<br>
 If not, fix <b>'wandb: false'</b> in <b>"configs/train.yml"</b>
-You can login through your command line or <b>'wandb.login()'</b> inside <b>"main.py"</b> 
+You can login through your command line or <b>'wandb.login()'</b> inside <b>"main.py"</b>
 
 For <b>Train</b>, edit the [<b>configs/train.yml</b>](configs/train.yml) and execute below command
 ```
@@ -60,4 +60,3 @@ bash bash_inference.sh
 ```
 
 - If you are using pretrained model, the result should be approximate to table's
-
