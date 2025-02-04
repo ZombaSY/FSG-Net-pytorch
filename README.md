@@ -1,4 +1,5 @@
-# [Official] [Full-scale Representation Guided Network for Retinal Vessel Segmentation]
+# Full-scale Representation Guided Network for Retinal Vessel Segmentation
+This is official repository of the paper [Full-scale Representation Guided Network for Retinal Vessel Segmentation](https://arxiv.org/abs/2501.18921)
 
 
 ## Environment
