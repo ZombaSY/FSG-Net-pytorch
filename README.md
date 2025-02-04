@@ -1,4 +1,4 @@
-# [Official] [Full Scale Guided Network for Retinal Vessel Segmentation]
+# [Official] [Full-scale Representation Guided Network for Retinal Vessel Segmentation]
 
 
 ## Environment
