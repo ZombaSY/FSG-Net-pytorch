@@ -23,19 +23,14 @@ This is official repository of the paper [Full-scale Representation Guided Netwo
 
 
 ## Pretrained model for each dataset
-[neU-Net for DRIVE](https://mega.nz/file/Ao0y2CIS#AlAqBogW8oAL4aAO9JLLW4cLi64lWx_8qmGxqqMoRPY) <br>
-[neU-Net for STARE](https://mega.nz/file/A9FWHTBS#Mv2A_8SGHVi9XABww3HcAnPMt027BrDv-Ko9hmhTsHQ) <br>
-[neU-Net for CHASE_DB1](https://mega.nz/file/xg9WyYCS#Scd5JlkXbPBOo-OFtA1P74zqEaq2qb1brPz6xFq4yfI) <br>
+Each pre-trained model could be found on [release version](https://github.com/ZombaSY/FSG-Net-pytorch/releases/tag/1.0.0)
 
 
 ## Dataset Preparation
 You can edit <b>'train_x_path...'</b> in "<b>configs/train.yml"</b> <br>
 The input and label should be sorted by name, or the dataset is unmatched to learn.
 
-For train/validation set, you can download from public link or divided dataset below. <br>
-[Train/Validation set for DRIVE](https://mega.nz/file/dwNCXRpK#5cO-XaL_mW2kyknajrB9QEdqswz6DTS-pkODcfaO1OU) <br>
-[Train/Validation set for STARE](https://mega.nz/file/B8NQRYqL#2r-rI4-Y4JOhA62KYPDR5sedyNXFRiMCeQBWYi8ejdA) <br>
-[Train/Validation set for CHASE_DB1](https://mega.nz/file/IosDGJjJ#vH7HKRZEkgh1Yt8iOQoyuzFc-PqfJQHzx1Sn7wU2QAY) <br>
+For train/validation set, you can download from public link or [release version](https://github.com/ZombaSY/FSG-Net-pytorch/releases/tag/1.0.0)]
 
 ---
 
