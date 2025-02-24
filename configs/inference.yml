@@ -6,7 +6,7 @@
   pin_memory: true,
   wandb: false,
   worker: 2,
-  CUDA_VISIBLE_DEVICES: '1',
+  CUDA_VISIBLE_DEVICES: '0',
 
   ### Train Parameters
   model_name: 'FSGNet',
@@ -19,9 +19,9 @@
   criterion: 'DiceBCE',
   input_space: 'RGB',
   input_channel: 3,
-  input_size: [608, 608],  # DRIVE:608, STARE:704, CHASEDB1:1024
+  input_size: [608, 608],  # DRIVE:608, STARE:704, CHASEDB1:1024, HRF: 1344
 
-  model_path: '/path/to/model.pt',
-  val_x_path: '/path/to/valid/input',
-  val_y_path: '/path/to/valid/label',
+  model_path: 'pretrained/FSG-Net-DRIVE.pt',
+  val_x_path: '/workspace/data/public/DRIVE/val/input',
+  val_y_path: '/workspace/data/public/DRIVE/val/label',
 }

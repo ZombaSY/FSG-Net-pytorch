@@ -40,7 +40,6 @@ class Inferencer:
         auc_list = []
         sen_list = []
         mcc_list = []
-        miou_list = []
 
         for batch_idx, (img, target) in enumerate(self.loader_form.Loader):
             with torch.no_grad():
@@ -59,15 +58,18 @@ class Inferencer:
                 metric_result = self.post_process(output, target, x_img, img_id)
                 f1_list.append(metric_result['f1'])
                 acc_list.append(metric_result['acc'])
-                # auc_list.append(metric_result['auc'])
+                auc_list.append(metric_result['auc'])
                 sen_list.append(metric_result['sen'])
                 mcc_list.append(metric_result['mcc'])
-                miou_list.append(metric_result['iou'])
 
-        print('mean mIoU', sum(miou_list) / len(miou_list))
+        metrics = self.metric.get_results()
+        cIoU = [metrics['Class IoU'][i] for i in range(self.args.n_classes + 1)]
+        mIoU = sum(cIoU) / (self.args.n_classes + 1)
+
+        print('mean mIoU', mIoU)
         print('mean F1 score:', sum(f1_list) / len(f1_list))
         print('mean Accuracy', sum(acc_list) / len(acc_list))
-        # print('mean AUC', sum(auc_list) / len(auc_list))
+        print('mean AUC', sum(auc_list) / len(auc_list))
         print('mean Sensitivity', sum(sen_list) / len(sen_list))
         print('mean MCC', sum(mcc_list) / len(mcc_list))
 
@@ -84,6 +86,7 @@ class Inferencer:
         target = utils.remove_center_padding(target)
 
         output_argmax = torch.where(output > 0.5, 1, 0).cpu().detach()
+        self.metric.update(target.squeeze(1).cpu().detach().numpy(), output_argmax.numpy())
 
         path, fn = os.path.split(img_id[0])
         img_id, ext = os.path.splitext(fn)
@@ -97,7 +100,7 @@ class Inferencer:
         Image.fromarray((output_argmax.squeeze().numpy() * 255).astype(np.uint8)).save(save_dir + img_id + f'_argmax.png', quality=100)
         # Image.fromarray(output_heatmap.astype(np.uint8)).save(save_dir + img_id + f'_heatmap_overlay.png', quality=100)
 
-        metric_result = metrics.metrics_np(output_argmax[None, :], target.squeeze(0).detach().cpu().numpy(), b_auc=False)
+        metric_result = metrics.metrics_np(output_argmax[None, :], target.squeeze(0).detach().cpu().numpy(), b_auc=True)
         print(f'{img_id} \t Done !!')
 
         return metric_result
@@ -155,7 +158,7 @@ class Inferencer:
 
     def _init_metric(self, task_name, num_class):
         if task_name == 'segmentation':
-            metric = metrics.StreamSegMetrics_segmentation(num_class)
+            metric = metrics.StreamSegMetrics_segmentation(num_class + 1)
         else:
             raise Exception('No task named', task_name)
 

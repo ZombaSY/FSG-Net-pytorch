@@ -60,7 +60,10 @@ class StreamSegMetrics_segmentation(_StreamMetrics):
 
     def _fast_hist(self, label_true, label_pred):
         mask = (label_true >= 0) & (label_true < self.n_classes)
-        hist = np.bincount(self.n_classes * label_true[mask].astype(int) + label_pred[mask], minlength=self.n_classes ** 2).reshape(self.n_classes, self.n_classes)
+        hist = np.bincount(
+            self.n_classes * label_true[mask].astype(int) + label_pred[mask],
+            minlength=self.n_classes ** 2,
+        ).reshape(self.n_classes, self.n_classes)
         return hist
 
     def get_results(self):
@@ -119,7 +122,7 @@ def metrics_np(np_res, np_gnd, b_auc=False):
         sensitivity = tp / (tp + fn + epsilon)  # Recall
         precision = tp / (tp + fp + epsilon)
         f1_score = (2 * sensitivity * precision) / (sensitivity + precision + epsilon)
-        iou = tp + (tp + fp + fn + epsilon)
+        iou = tp / (tp + fp + fn + epsilon)
 
         tp_tmp, tn_tmp, fp_tmp, fn_tmp = tp / 1000, tn / 1000, fp / 1000, fn / 1000     # to prevent overflowing
         mcc = (tp_tmp * tn_tmp - fp_tmp * fn_tmp) / math.sqrt((tp_tmp + fp_tmp) * (tp_tmp + fn_tmp) * (tn_tmp + fp_tmp) * (tn_tmp + fn_tmp) + epsilon)  # Matthews correlation coefficient

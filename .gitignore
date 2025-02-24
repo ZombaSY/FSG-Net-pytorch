@@ -2,6 +2,7 @@ wandb/
 model_checkpoints/
 pretrained/
 .idea/
+.vscode/
 
 temp.py
 git-token
