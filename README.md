@@ -30,7 +30,7 @@ Each pre-trained model could be found on [release version](https://github.com/Zo
 You can edit <b>'train_x_path...'</b> in "<b>configs/train.yml"</b> <br>
 The input and label should be sorted by name, or the dataset is unmatched to learn.
 
-For train/validation set, you can download from public link or [release version](https://github.com/ZombaSY/FSG-Net-pytorch/releases/tag/1.0.0)
+For train/validation set, you can download from public link or [release version](https://github.com/ZombaSY/FSG-Net-pytorch/releases/tag/1.1.0)
 
 ---
 
