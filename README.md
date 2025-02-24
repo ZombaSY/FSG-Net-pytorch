@@ -1,6 +1,7 @@
 # Full-scale Representation Guided Network for Retinal Vessel Segmentation
 This is official repository of the paper [Full-scale Representation Guided Network for Retinal Vessel Segmentation](https://arxiv.org/abs/2501.18921)
 
+![image_2](images/Qualitative_evaluation.png)
 
 ## Environment
 
@@ -10,7 +11,7 @@ This is official repository of the paper [Full-scale Representation Guided Netwo
 - CUDA: 11.2
 - Pytorch 1.8.1
 
-## Experimental Result
+## ✅ Experimental Result
 
 |Dataset|mIoU|F1 score|Acc|AUC|Sen|MCC
 |---|---|---|---|---|---|---|
@@ -19,14 +20,12 @@ This is official repository of the paper [Full-scale Representation Guided Netwo
 |CHASE_DB1|82.680|81.019|97.515|99.378|85.995|79.889|
 |HRF|83.088|81.567|97.106|98.744|83.616|80.121|
 
-![image_2](images/Qualitative_evaluation.png)
 
-
-## Pretrained model for each dataset
+## ✅ Pretrained model for each dataset
 Each pre-trained model could be found on [release version](https://github.com/ZombaSY/FSG-Net-pytorch/releases/tag/1.1.0)
 
 
-## Dataset Preparation
+## 🧻 Dataset Preparation
 You can edit <b>'train_x_path...'</b> in "<b>configs/train.yml"</b> <br>
 The input and label should be sorted by name, or the dataset is unmatched to learn.
 
@@ -34,7 +33,7 @@ For train/validation set, you can download from public link or [release version]
 
 ---
 
-### Train
+## 🚄 Train
 
 If you have installed 'WandB', login your ID in command line.<br>
 If not, fix <b>'wandb: false'</b> in <b>"configs/train.yml"</b>
@@ -47,7 +46,7 @@ bash bash_train.sh
 
 ---
 
-### Inference
+## 🛴 Inference
 
 For <b>Inference</b>, edit the [<b>configs/inference.yml</b>](configs/inference.yml) and execute below command. <br>
 Please locate your model path via  <b>'model_path'</b> in <b>"configs/inference.yml"</b>
