@@ -14,7 +14,7 @@
   CUDA_VISIBLE_DEVICES: '0',
 
   ### Train Parameters
-  model_name: 'AGNet',
+  model_name: 'FSGNet',
     n_classes: 1,
     in_channels: 3,
   dataloader: 'Image2Image_zero_pad',
@@ -22,7 +22,7 @@
   task: 'segmentation',
   input_space: 'RGB',
   input_channel: 3,
-  input_size: [608, 608],  # [h, w] DRIVE:608, STARE:704, CHASEDB1:1024, HRF:1344
+  input_size: [608, 608],  # [h, w] DRIVE:608, STARE:704, CHASE_DB1:1024, HRF:1344
   optimizer: 'AdamW',
     lr: 0.001,
     scheduler: 'WarmupCosine',  # ConstantLRSchedule, WarmupCosine
@@ -33,7 +33,7 @@
   epoch: 10000,
   ema_decay: 0, # set 0 to deactivate
   class_weight: [1.0, 1.0],
-  model_path: '', # pretrained/FSGNet_DRIVE.pt
+  model_path: '', # pretrained/FSG-Net-DRIVE.pt
     freeze_layer: false,
 
   ### Augmentation Parameters
