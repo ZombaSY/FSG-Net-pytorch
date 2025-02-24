@@ -23,7 +23,7 @@ This is official repository of the paper [Full-scale Representation Guided Netwo
 
 
 ## Pretrained model for each dataset
-Each pre-trained model could be found on [release version](https://github.com/ZombaSY/FSG-Net-pytorch/releases/tag/1.0.0)
+Each pre-trained model could be found on [release version](https://github.com/ZombaSY/FSG-Net-pytorch/releases/tag/1.1.0)
 
 
 ## Dataset Preparation
