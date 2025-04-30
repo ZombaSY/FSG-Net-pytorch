@@ -151,6 +151,14 @@ class Inferencer:
                                                                    pin_memory=self.args.pin_memory,
                                                                    mode=mode,
                                                                    args=self.args)
+        elif self.args.dataloader == 'Image2Image_resize':
+            loader = dataloader_hub.Image2ImageDataLoader_resize(x_path=x_path,
+                                                                 y_path=y_path,
+                                                                 batch_size=batch_size,
+                                                                 num_workers=self.args.worker,
+                                                                 pin_memory=self.args.pin_memory,
+                                                                 mode=mode,
+                                                                 args=self.args)
         else:
             raise Exception('No dataloader named', self.args.dataloader)
 

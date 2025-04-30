@@ -11,13 +11,13 @@
   saved_model_directory: 'model_ckpts',
   train_fold: 1,
   project_name: 'FSG-Net',
-  CUDA_VISIBLE_DEVICES: '0',
+  CUDA_VISIBLE_DEVICES: '2',
 
   ### Train Parameters
   model_name: 'FSGNet',
     n_classes: 1,
     in_channels: 3,
-  dataloader: 'Image2Image_zero_pad',
+  dataloader: 'Image2Image_resize',
   criterion: 'DiceBCELoss', # DiceBCELoss
   task: 'segmentation',
   input_space: 'RGB',
@@ -45,8 +45,8 @@
   transform_rand_resize: true,
   transform_rand_crop: 288,
 
-  train_x_path: '/path/to/train/input',
-  train_y_path: '/path/to/train/label',
-  val_x_path:   '/path/to/valid/input',
-  val_y_path:   '/path/to/valid/label',
+  train_x_path: '/lulu_data/data/public/HRF/all/input',
+  train_y_path: '/lulu_data/data/public/HRF/all/label',
+  val_x_path:   '/lulu_data/data/public/Retina-comb/DSC/all/input',
+  val_y_path:   '/lulu_data/data/public/Retina-comb/DSC/all/label',
 }
