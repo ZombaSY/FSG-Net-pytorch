@@ -17,7 +17,7 @@
   model_name: 'FSGNet',
     n_classes: 1,
     in_channels: 3,
-  dataloader: 'Image2Image_resize',
+  dataloader: 'Image2Image_zero_pad',
   criterion: 'DiceBCELoss', # DiceBCELoss
   task: 'segmentation',
   input_space: 'RGB',
@@ -45,8 +45,8 @@
   transform_rand_resize: true,
   transform_rand_crop: 288,
 
-  train_x_path: '/lulu_data/data/public/HRF/all/input',
-  train_y_path: '/lulu_data/data/public/HRF/all/label',
-  val_x_path:   '/lulu_data/data/public/Retina-comb/DSC/all/input',
-  val_y_path:   '/lulu_data/data/public/Retina-comb/DSC/all/label',
+  train_x_path: '/path/to/train/input',
+  train_y_path: '/path/to/train/label',
+  val_x_path: '/path/to/val/input',
+  val_y_path: '/path/to/val/label',
 }
