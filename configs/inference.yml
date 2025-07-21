@@ -19,9 +19,9 @@
   criterion: 'DiceBCE',
   input_space: 'RGB',
   input_channel: 3,
-  input_size: [1024, 1024],  # DRIVE:608, STARE:704, CHASE_DB1:1024, HRF: 1344
+  input_size: [608, 608],  # DRIVE:608, STARE:704, CHASE_DB1:1024, HRF: 1344
 
-  model_path: '/path/to/model.pt',
-  val_x_path: '/path/to/val/input',
-  val_y_path: '/path/to/val/label',
+  model_path: 'pretrained/FSGNet-Epoch_918-f1_score_0.7753670181444041.pt',
+  val_x_path: '/lulu_data/data/public/STARE/all/input',
+  val_y_path: '/lulu_data/data/public/STARE/all/label',
 }

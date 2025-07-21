@@ -52,10 +52,13 @@ class Inferencer:
 
                 output = self.model(x_in)
 
-                if isinstance(output, tuple) or isinstance(output, list):  # condition for deep supervision
-                    output = output[0]
+                for i in range(len(output)):
+                    metric_result = self.post_process(output[i], target, x_img, img_id, i)
 
-                metric_result = self.post_process(output, target, x_img, img_id)
+                # if isinstance(output, tuple) or isinstance(output, list):  # condition for deep supervision
+                #     output = output[0]
+
+                # metric_result = self.post_process(output, target, x_img, img_id)
                 f1_list.append(metric_result['f1'])
                 acc_list.append(metric_result['acc'])
                 auc_list.append(metric_result['auc'])
@@ -73,7 +76,7 @@ class Inferencer:
         print('mean Sensitivity', sum(sen_list) / len(sen_list))
         print('mean MCC', sum(mcc_list) / len(mcc_list))
 
-    def post_process(self, output, target, x_img, img_id):
+    def post_process(self, output, target, x_img, img_id, idx):
         # reconstruct original image
         x_img = x_img.squeeze(0).data.cpu().numpy()
         x_img = np.transpose(x_img, (1, 2, 0))
@@ -82,8 +85,8 @@ class Inferencer:
         x_img = x_img * 255.0
         x_img = x_img.astype(np.uint8)
 
-        output = utils.remove_center_padding(output)
-        target = utils.remove_center_padding(target)
+        # output = utils.remove_center_padding(output)
+        # target = utils.remove_center_padding(target)
 
         output_argmax = torch.where(output > 0.5, 1, 0).cpu().detach()
         self.metric.update(target.squeeze(1).cpu().detach().numpy(), output_argmax.numpy())
@@ -96,7 +99,8 @@ class Inferencer:
         if not os.path.exists(save_dir):
             os.mkdir(save_dir)
 
-        Image.fromarray(x_img).save(save_dir + img_id + '.png', quality=100)
+        img_id = img_id + '_' + str(2 - idx)
+        # Image.fromarray(x_img).save(save_dir + img_id + '.png', quality=100)
         Image.fromarray((output_argmax.squeeze().numpy() * 255).astype(np.uint8)).save(save_dir + img_id + f'_argmax.png', quality=100)
         # Image.fromarray(output_heatmap.astype(np.uint8)).save(save_dir + img_id + f'_heatmap_overlay.png', quality=100)
 

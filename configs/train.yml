@@ -1,6 +1,6 @@
 {
  ### Environment Parameters
-  debug: false,
+  debug: true,
   mode: train,
   cuda: true,
   pin_memory: true,
@@ -11,10 +11,10 @@
   saved_model_directory: 'model_ckpts',
   train_fold: 1,
   project_name: 'FSG-Net',
-  CUDA_VISIBLE_DEVICES: '2',
+  CUDA_VISIBLE_DEVICES: '0',
 
   ### Train Parameters
-  model_name: 'FSGNet',
+  model_name: 'Swin_tiny_segmentation',
     n_classes: 1,
     in_channels: 3,
   dataloader: 'Image2Image_zero_pad',
@@ -45,8 +45,8 @@
   transform_rand_resize: true,
   transform_rand_crop: 288,
 
-  train_x_path: '/path/to/train/input',
-  train_y_path: '/path/to/train/label',
-  val_x_path: '/path/to/val/input',
-  val_y_path: '/path/to/val/label',
+  train_x_path: '/lulu_data/data/public/DRIVE/train/input',
+  train_y_path: '/lulu_data/data/public/DRIVE/train/label',
+  val_x_path: '/lulu_data/data/public/DRIVE/val/input',
+  val_y_path: '/lulu_data/data/public/DRIVE/val/label',
 }

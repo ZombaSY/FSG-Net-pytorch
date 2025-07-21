@@ -1,6 +1,8 @@
 import torch.nn as nn
 import torch
+import torch.nn.functional as F
 
+from collections import OrderedDict
 from models.backbones import Unet_part
 from models.backbones import UNeTPluss
 from models.backbones import ResUNet as ResUNets
@@ -11,6 +13,8 @@ from models.backbones import ConvUNeXt as ConvUNeXt_parts
 from models.backbones import R2UNet as R2UNet_parts
 from models.backbones import FRUNet as FRUNet_parts
 from models.backbones import FSGNet as FSGNet_parts
+from models.backbones import head
+from models.backbones import swin
 
 
 class UNet(nn.Module):
@@ -167,3 +171,70 @@ class FSGNet(nn.Module):
 
     def forward(self, x):
         return self.FSGNet(x)
+
+
+class Swin_t(nn.Module):
+    def __init__(self, in_channel, base_c=96):
+        super().__init__()
+
+        self.swin_transformer = swin.SwinTransformer(in_chans=in_channel,
+                                                     embed_dim=base_c,
+                                                     depths=[2, 2, 6, 2],
+                                                     num_heads=[3, 6, 12, 24],
+                                                     window_size=7,
+                                                     mlp_ratio=4.,
+                                                     qkv_bias=True,
+                                                     qk_scale=None,
+                                                     drop_rate=0.,
+                                                     attn_drop_rate=0.,
+                                                     drop_path_rate=0.3,
+                                                     ape=False,
+                                                     patch_norm=True,
+                                                     out_indices=(0, 1, 2, 3),
+                                                     use_checkpoint=False)
+
+    def load_pretrained_imagenet(self, dst):
+        pretrained_states = torch.load(dst)['model']
+        pretrained_states_backbone = OrderedDict()
+
+        for item in pretrained_states.keys():
+            if 'head.weight' == item or 'head.bias' == item or 'norm.weight' == item or 'norm.bias' == item or 'layers.0.blocks.1.attn_mask' == item or 'layers.1.blocks.1.attn_mask' == item or 'layers.2.blocks.1.attn_mask' == item or 'layers.2.blocks.3.attn_mask' == item or 'layers.2.blocks.5.attn_mask' == item:
+                continue
+            pretrained_states_backbone[item] = pretrained_states[item]
+
+        self.swin_transformer.remove_fpn_norm_layers()  # temporally remove fpn norm layers that not included on public-release model
+        self.swin_transformer.load_state_dict(pretrained_states_backbone)
+        self.swin_transformer.add_fpn_norm_layers()
+
+    def forward(self, x):
+        feat1, feat2, feat3, feat4 = self.swin_transformer(x)
+        out_dict = {'feats': [feat1, feat2, feat3, feat4]}
+
+        return out_dict
+
+
+class Swin_tiny_segmentation(Swin_t):
+    def __init__(self, num_class=1, in_channel=3, base_c=96, **kwargs):
+        super().__init__(in_channel, base_c)
+
+        self.uper_head = head.M_UPerHead_dsv(in_channels=[base_c, base_c * 2, base_c * 4, base_c * 8],
+                                             in_index=[0, 1, 2, 3],
+                                             pool_scales=(1, 2, 3, 6),
+                                             channels=512,
+                                             dropout_ratio=0.1,
+                                             num_class=num_class,
+                                             align_corners=False,)
+
+    def forward(self, x):
+        x_size = x.shape[2:]
+
+        # get segmentation map
+        feats = self.swin_transformer(x)
+
+        out_dict = self.uper_head(*feats)
+        out_dict['seg'] = F.interpolate(out_dict['seg'], x_size, mode='bilinear', align_corners=False)
+        for i in range(len(out_dict['seg_aux'])):
+            out_dict['seg_aux'][i] = F.interpolate(out_dict['seg_aux'][i], x_size, mode='bilinear', align_corners=False)
+        out_dict['feats'] = feats
+
+        return torch.sigmoid(out_dict['seg'])
