@@ -15,6 +15,7 @@ from models.backbones import FRUNet as FRUNet_parts
 from models.backbones import FSGNet as FSGNet_parts
 from models.backbones import head
 from models.backbones import swin
+from models.backbones import HRNet
 
 
 class UNet(nn.Module):
@@ -238,3 +239,18 @@ class Swin_tiny_segmentation(Swin_t):
         out_dict['feats'] = feats
 
         return torch.sigmoid(out_dict['seg'])
+
+
+class HRNet_t(nn.Module):
+    def __init__(self, num_class=1, in_channel=3, base_c=96, **kwargs):
+        super().__init__()
+        # from config import config
+        # from config import update_config
+        # config = argparse.
+
+        self.backbone = HRNet.HighResolutionNet()
+
+    def forward(self, x):
+        x = self.backbone(x)
+
+        return torch.sigmoid(x)

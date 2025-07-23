@@ -1,6 +1,6 @@
 {
  ### Environment Parameters
-  debug: true,
+  debug: false,
   mode: train,
   cuda: true,
   pin_memory: true,
@@ -14,23 +14,23 @@
   CUDA_VISIBLE_DEVICES: '0',
 
   ### Train Parameters
-  model_name: 'Swin_tiny_segmentation',
+  model_name: 'HRNet_t',
     n_classes: 1,
     in_channels: 3,
-  dataloader: 'Image2Image_zero_pad',
+  dataloader: 'Image2Image_resize', #Image2Image_zero_pad, Image2Image_resize
   criterion: 'DiceBCELoss', # DiceBCELoss
   task: 'segmentation',
   input_space: 'RGB',
   input_channel: 3,
-  input_size: [608, 608],  # [h, w] DRIVE:608, STARE:704, CHASE_DB1:1024, HRF:1344
+  input_size: [1024, 1024],  # [h, w] DRIVE:608, STARE:704, CHASE_DB1:1024, HRF:1344
   optimizer: 'AdamW',
-    lr: 0.001,
+    lr: 0.00001,
     scheduler: 'WarmupCosine',  # ConstantLRSchedule, WarmupCosine
     cycles: 100,
     warmup_epoch: 20,
     weight_decay: 0.05, # 0.05
   batch_size: 4,
-  epoch: 10000,
+  epoch: 20000,
   ema_decay: 0, # set 0 to deactivate
   class_weight: [1.0, 1.0],
   model_path: '', # pretrained/FSG-Net-DRIVE.pt
@@ -42,11 +42,11 @@
   transform_hflip: true,
   transform_perspective: true,
   transform_cutmix: true,
-  transform_rand_resize: true,
+  transform_rand_resize: true, # false on transformer
   transform_rand_crop: 288,
 
-  train_x_path: '/lulu_data/data/public/DRIVE/train/input',
-  train_y_path: '/lulu_data/data/public/DRIVE/train/label',
-  val_x_path: '/lulu_data/data/public/DRIVE/val/input',
-  val_y_path: '/lulu_data/data/public/DRIVE/val/label',
+  train_x_path: '/lulu_data/data/public/HRF/train/input',
+  train_y_path: '/lulu_data/data/public/HRF/train/label',
+  val_x_path: '/lulu_data/data/public/HRF/val/input',
+  val_y_path: '/lulu_data/data/public/HRF/val/label',
 }

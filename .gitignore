@@ -1,5 +1,5 @@
 wandb/
-model_checkpoints/
+model_ckpts/
 pretrained/
 .idea/
 .vscode/
