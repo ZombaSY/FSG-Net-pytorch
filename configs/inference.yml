@@ -6,21 +6,21 @@
   pin_memory: true,
   wandb: false,
   worker: 2,
-  CUDA_VISIBLE_DEVICES: '0',
+  CUDA_VISIBLE_DEVICES: '2',
 
   ### Train Parameters
-  model_name: 'Swin_tiny_segmentation',
+  model_name: 'FSGNet_noGRM',
     n_classes: 1,
     in_channels: 3,
   inference_mode: 'segmentation',
   task: 'segmentation',
-  dataloader: 'Image2Image_zero_pad',
+  dataloader: 'Image2Image_zero_pad', # Image2Image_zero_pad, Image2Image_resize
   criterion: 'DiceBCE',
   input_space: 'RGB',
   input_channel: 3,
-  input_size: [1344, 1344],  # DRIVE:608, STARE:704, CHASE_DB1:1024, HRF: 1344
+  input_size: [608, 608],  # DRIVE:608, STARE:704, CHASE_DB1:1024, HRF: 1344
 
-  model_path: 'pretrained/Swin_tiny_segmentation-Epoch_9976-f1_score_0.7477149209415183.pt',
-  val_x_path: '/lulu_data/data/public/HRF/val/input',
-  val_y_path: '/lulu_data/data/public/HRF/val/label',
+  model_path: 'path/to/model.pt',
+  val_x_path: '/path/to/val/input',
+  val_y_path: '/path/to/val/label',
 }

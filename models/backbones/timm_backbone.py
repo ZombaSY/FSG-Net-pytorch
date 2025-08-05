@@ -7,8 +7,13 @@ class BackboneLoader(nn.Module):
     def __init__(self, model_name, **kwargs):
         super().__init__()
         self.backbone = timm.create_model(model_name, **kwargs)
-        self.dropout = torch.nn.Dropout(p=0.2)
 
     def forward(self, x):
+        out = []
 
-        return self.backbone.forward_features(x)
+        x = self.backbone.stem(x)
+        for stage in self.backbone.stages:
+            x = stage(x)
+            out.append(x)
+
+        return out

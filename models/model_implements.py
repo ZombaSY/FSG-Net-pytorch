@@ -16,6 +16,7 @@ from models.backbones import FSGNet as FSGNet_parts
 from models.backbones import head
 from models.backbones import swin
 from models.backbones import HRNet
+from models.backbones import timm_backbone
 
 
 class UNet(nn.Module):
@@ -234,9 +235,9 @@ class Swin_tiny_segmentation(Swin_t):
 
         out_dict = self.uper_head(*feats)
         out_dict['seg'] = F.interpolate(out_dict['seg'], x_size, mode='bilinear', align_corners=False)
-        for i in range(len(out_dict['seg_aux'])):
-            out_dict['seg_aux'][i] = F.interpolate(out_dict['seg_aux'][i], x_size, mode='bilinear', align_corners=False)
-        out_dict['feats'] = feats
+        # for i in range(len(out_dict['seg_aux'])):
+        #     out_dict['seg_aux'][i] = F.interpolate(out_dict['seg_aux'][i], x_size, mode='bilinear', align_corners=False)
+        # out_dict['feats'] = feats
 
         return torch.sigmoid(out_dict['seg'])
 
@@ -254,3 +255,43 @@ class HRNet_t(nn.Module):
         x = self.backbone(x)
 
         return torch.sigmoid(x)
+
+
+class MaxViT_tiny(nn.Module):
+    def __init__(self, num_class=1, in_channel=3, base_c=64, **kwargs):
+        super().__init__()
+
+        self.backbone = self.backbone = timm_backbone.BackboneLoader('maxvit_tiny_tf_512.in1k', exportable=True, pretrained=True)
+        self.uper_head = head.M_UPerHead_dsv(in_channels=[base_c, base_c * 2, base_c * 4, base_c * 8],
+                                             in_index=[0, 1, 2, 3],
+                                             pool_scales=(1, 2, 3, 6),
+                                             channels=512,
+                                             dropout_ratio=0.1,
+                                             num_class=num_class,
+                                             align_corners=False,)
+
+
+    def forward(self, x):
+        x_size = x.shape[2:]
+
+        x = self.backbone(x)
+        out_dict = self.uper_head(*x)
+        out_dict['seg'] = F.interpolate(out_dict['seg'], x_size, mode='bilinear', align_corners=False)
+
+        return torch.sigmoid(out_dict['seg'])
+
+
+class FSGNet_noGRM(nn.Module):
+    def __init__(self,
+                 in_channels=3,
+                 n_classes=1,
+                 depths=[3, 3, 9, 3],
+                 base_c=64,
+                 kernel_size=3,
+                 **kwargs):
+        super().__init__()
+        self.FSGNet = FSGNet_parts.FSGNet_noGRM(in_channels, n_classes, base_c,
+                                                depths=depths, kernel_size=kernel_size)
+
+    def forward(self, x):
+        return self.FSGNet(x)
