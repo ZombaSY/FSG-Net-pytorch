@@ -55,3 +55,13 @@ bash bash_inference.sh
 ```
 
 - If you are using pretrained model, the result should be approximate to table's
+
+## 📚 Citation
+```bibtex
+@article{seo2025fullscalerepresentationguidednetwork,
+  title   = {Full-scale Representation Guided Network for Retinal Vessel Segmentation},
+  author  = {Sunyong Seo, Huisu Yoon, Semin Kim, Jongha Lee},
+  journal = {arXiv preprint arXiv:2501.18921},
+  year    = {2025}
+}
+```
