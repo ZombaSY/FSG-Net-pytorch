@@ -26,7 +26,7 @@ Each pre-trained model could be found on [release version](https://github.com/Zo
 
 
 ## 🧻 Dataset Preparation
-You can edit <b>'train_x_path...'</b> in "<b>configs/train.yml"</b> <br>
+You can edit `train_x_path...` in [<b>configs/train.yml</b>](configs/train.yml) <br>
 The input and label should be sorted by name, or the dataset is unmatched to learn.
 
 For train/validation set, you can download from public link or [release version](https://github.com/ZombaSY/FSG-Net-pytorch/releases/tag/1.1.0)
@@ -36,8 +36,8 @@ For train/validation set, you can download from public link or [release version]
 ## 🚄 Train
 
 If you have installed 'WandB', login your ID in command line.<br>
-If not, fix <b>'wandb: false'</b> in <b>"configs/train.yml"</b>
-You can login through your command line or <b>'wandb.login()'</b> inside <b>"main.py"</b>
+If not, modify `wandb=false` in [<b>configs/train.yml</b>](configs/train.yml).<br>
+You can login through your command line or `wandb.login()` inside "main.py"
 
 For <b>Train</b>, edit the [<b>configs/train.yml</b>](configs/train.yml) and execute below command
 ```
@@ -49,12 +49,12 @@ bash bash_train.sh
 ## 🛴 Inference
 
 For <b>Inference</b>, edit the [<b>configs/inference.yml</b>](configs/inference.yml) and execute below command. <br>
-Please locate your model path via  <b>'model_path'</b> in <b>"configs/inference.yml"</b>
+Please locate your model path via `model_path` in [<b>configs/inference.yml</b>](configs/inference.yml)</b>
 ```
 bash bash_inference.sh
 ```
 
-- If you are using pretrained model, the result should be approximate to table's
+- If you are using pretrained model, the result should be approximate to experimental result's
 
 ## 📚 Citation
 ```bibtex
