@@ -5,11 +5,11 @@ This is official repository of the paper [Full-scale Representation Guided Netwo
 
 ## Environment
 
-- OS: Ubuntu 16.04
+- OS: Ubuntu 22.04 LTS
 - GPU: RTX 4090 24GB
-- GPU Driver version: 460.106.00
-- CUDA: 11.2
-- Pytorch 1.8.1
+- GPU Driver version: 550.54.14
+- CUDA: 12.4
+- Pytorch 2.4.1
 
 ## ✅ Experimental Result
 
